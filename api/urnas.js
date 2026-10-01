@@ -1,87 +1,39 @@
-// api/urnas.js
-
+// api/urnas.js - Conexão Real com o TSE para Boletins de Urna de Boca da Mata
 export default async function handler(req, res) {
-  // Configuração dos cabeçalhos CORS
-  res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+  res.setHeader('Access-Control-Allow-Methods', 'GET');
+  res.setHeader('Cache-Control', 's-maxage=10, stale-while-revalidate=5');
 
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
+  const { cargo = '0003', eleicao = '6259' } = req.query;
 
-  // Dados das seções de Boca da Mata - AL (Código TSE: 27057 / 48ª Zona Eleitoral)
-  const dadosBocaDaMata = {
-    municipio: "Boca da Mata",
-    uf: "AL",
-    codigoTse: "27057",
-    zonaEleitoral: "0048",
-    totalSecoes: 42,
-    secoesApuradas: 35,
-    percentualApurado: 83.33,
-    locaisVotacao: [
-      {
-        id: "loc-1",
-        nome: "Escola Municipal Monsenhor Claranha",
-        endereco: "Rua Dep. José Medeiros, Centro",
-        bairro: "Centro",
-        secoes: [
-          {
-            numeroSecao: "0012",
-            status: "TOTALIZADA",
-            eleitoresAptos: 340,
-            comparecimento: 285,
-            votosValidos: 268,
-            votosBrancos: 7,
-            votosNulos: 10,
-            candidatos: [
-              { numero: "13", nome: "Candidato A", partido: "PT", votos: 145, porcentagem: 54.10 },
-              { numero: "22", nome: "Candidato B", partido: "PL", votos: 110, porcentagem: 41.04 },
-              { numero: "15", nome: "Candidato C", partido: "MDB", votos: 13, porcentagem: 4.85 }
-            ]
-          },
-          {
-            numeroSecao: "0013",
-            status: "TOTALIZADA",
-            eleitoresAptos: 350,
-            comparecimento: 298,
-            votosValidos: 280,
-            votosBrancos: 5,
-            votosNulos: 13,
-            candidatos: [
-              { numero: "13", nome: "Candidato A", partido: "PT", votos: 152, porcentagem: 54.28 },
-              { numero: "22", nome: "Candidato B", partido: "PL", votos: 118, porcentagem: 42.14 },
-              { numero: "15", nome: "Candidato C", partido: "MDB", votos: 10, porcentagem: 3.57 }
-            ]
-          }
-        ]
-      },
-      {
-        id: "loc-2",
-        nome: "Escola Estadual Professor Alexandre Alves",
-        endereco: "Av. Perimetral",
-        bairro: "Bairro Novo",
-        secoes: [
-          {
-            numeroSecao: "0020",
-            status: "TOTALIZADA",
-            eleitoresAptos: 380,
-            comparecimento: 310,
-            votosValidos: 295,
-            votosBrancos: 6,
-            votosNulos: 9,
-            candidatos: [
-              { numero: "22", nome: "Candidato B", partido: "PL", votos: 160, porcentagem: 54.23 },
-              { numero: "13", nome: "Candidato A", partido: "PT", votos: 125, porcentagem: 42.37 },
-              { numero: "15", nome: "Candidato C", partido: "MDB", votos: 10, porcentagem: 3.38 }
-            ]
-          }
-        ]
+  // Código de Boca da Mata no TSE: 27235 | Estado: AL
+  const cdCargoPad = cargo.padStart(4, '0');
+  const cdElecPad = eleicao.padStart(6, '0');
+
+  // URL Oficial dos Boletins de Urna / Seções de Boca da Mata no TSE
+  const urlTseUrnas = `https://resultados.tse.jus.br/oficial/ele2026/${eleicao}/dados/al/al27235-c${cdCargoPad}-e${cdElecPad}-v.json`;
+
+  try {
+    const response = await fetch(urlTseUrnas, {
+      headers: {
+        'User-Agent': 'AcompanhamentoEleitoral/1.0',
+        'Accept': 'application/json'
       }
-    ]
-  };
+    });
 
-  return res.status(200).json(dadosBocaDaMata);
+    if (!response.ok) {
+      return res.status(200).json({ 
+        aguardando: true,
+        message: 'Aguardando encerramento da votação e transmissão das urnas da 48ª Zona Eleitoral de Boca da Mata.'
+      });
+    }
+
+    const data = await response.json();
+    return res.status(200).json(data);
+  } catch (err) {
+    return res.status(200).json({ 
+      aguardando: true,
+      message: 'Aguardando liberação dos dados oficiais das urnas pelo TSE.'
+    });
+  }
 }
