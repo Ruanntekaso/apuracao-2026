@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apuração 2026 - Boca da Mata & Alagoas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans antialiased">
+
+  <!-- Cabeçalho -->
+  <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-4">
+      <div class="flex items-center gap-3">
+        <span class="inline-block w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
+        <h1 class="text-xl font-bold tracking-tight text-white">Apuração 2026 <span class="text-xs bg-emerald-950 text-emerald-400 border border-emerald-800 px-2 py-0.5 rounded font-mono ml-2">AO VIVO</span></h1>
+      </div>
+      
+      <div class="flex items-center gap-2 text-xs text-slate-400">
+        <i class="fa-solid fa-clock"></i>
+        <span>Última atualização: <strong id="lbl-horario" class="text-slate-200">--:--:--</strong></span>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 py-6 space-y-6">
+
+    <!-- Seleção de Localidade e Cargo -->
+    <section class="bg-slate-800/80 p-4 rounded-xl border border-slate-700 flex flex-wrap gap-4 justify-between items-center">
+      
+      <!-- Localidade -->
+      <div class="flex items-center gap-2">
+        <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Localidade:</label>
+        <div class="inline-flex rounded-lg bg-slate-900 p-1 border border-slate-700">
+          <button id="btn-bm" onclick="setEscopo('27111')" class="px-3 py-1.5 rounded-md text-sm font-medium transition-all bg-emerald-600 text-white shadow">
+            <i class="fa-solid fa-location-dot mr-1"></i> Boca da Mata (AL)
+          </button>
+          <button id="btn-al" onclick="setEscopo('')" class="px-3 py-1.5 rounded-md text-sm font-medium text-slate-400 hover:text-white transition-all">
+            <i class="fa-solid fa-map mr-1"></i> Alagoas (Estadual)
+          </button>
+        </div>
+      </div>
+
+      <!-- Cargo -->
+      <div class="flex items-center gap-2 w-full sm:w-auto">
+        <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Cargo:</label>
+        <select id="sel-cargo" onchange="carregarDados()" class="bg-slate-900 border border-slate-700 text-white text-sm rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500 w-full sm:w-auto">
+          <option value="0001">Presidente da República</option>
+          <option value="0003" selected>Governador</option>
+          <option value="0005">Senador (2 Vagas)</option>
+          <option value="0006">Deputado Federal</option>
+          <option value="0007">Deputado Estadual</option>
+        </select>
+      </div>
+
+    </section>
+
+    <!-- Métricas Globais da Apuração -->
+    <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700/60">
+        <p class="text-xs text-slate-400 uppercase font-medium">Seções Apuradas</p>
+        <p id="met-apurado" class="text-2xl font-bold text-emerald-400 mt-1">0,00%</p>
+        <div class="w-full bg-slate-700 rounded-full h-1.5 mt-2 overflow-hidden">
+          <div id="bar-apurado" class="bg-emerald-500 h-1.5 rounded-full" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700/60">
+        <p class="text-xs text-slate-400 uppercase font-medium">Votos Válidos</p>
+        <p id="met-validos" class="text-2xl font-bold text-slate-100 mt-1">0</p>
+      </div>
+
+      <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700/60">
+        <p class="text-xs text-slate-400 uppercase font-medium">Brancos / Nulos</p>
+        <p id="met-bn" class="text-2xl font-bold text-slate-100 mt-1">0 / 0</p>
+      </div>
+
+      <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700/60">
+        <p class="text-xs text-slate-400 uppercase font-medium">Abstenções</p>
+        <p id="met-abstencao" class="text-2xl font-bold text-amber-400 mt-1">0</p>
+      </div>
+    </section>
+
+    <!-- Ranking de Candidatos -->
+    <section class="bg-slate-800 p-5 rounded-xl border border-slate-700">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-lg font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-users text-emerald-400"></i> Classificação dos Candidatos
+        </h2>
+        <span id="lbl-vagas" class="text-xs bg-slate-700 text-slate-300 px-2.5 py-1 rounded-full font-medium">--</span>
+      </div>
+
+      <div id="container-candidatos" class="space-y-3">
+        <div class="text-center py-12 text-slate-500">
+          <i class="fa-solid fa-circle-notch animate-spin text-2xl mb-2"></i>
+          <p>Conectando com o servidor do TSE...</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    let escopoMun = '27111'; // Boca da Mata (AL) por padrão
+
+    function setEscopo(mun) {
+      escopoMun = mun;
+      const btnBm = document.getElementById('btn-bm');
+      const btnAl = document.getElementById('btn-al');
+
+      if (mun === '27111') {
+        btnBm.className = "px-3 py-1.5 rounded-md text-sm font-medium transition-all bg-emerald-600 text-white shadow";
+        btnAl.className = "px-3 py-1.5 rounded-md text-sm font-medium text-slate-400 hover:text-white transition-all";
+      } else {
+        btnAl.className = "px-3 py-1.5 rounded-md text-sm font-medium transition-all bg-emerald-600 text-white shadow";
+        btnBm.className = "px-3 py-1.5 rounded-md text-sm font-medium text-slate-400 hover:text-white transition-all";
+      }
+      carregarDados();
+    }
+
+    async function carregarDados() {
+      const cargo = document.getElementById('sel-cargo').value;
+      const container = document.getElementById('container-candidatos');
+      
+      const vagasMap = { '0001': '1 Vaga', '0003': '1 Vaga', '0005': '2 Vagas', '0006': '9 Vagas', '0007': '27 Vagas' };
+      document.getElementById('lbl-vagas').innerText = `Vagas em disputa: ${vagasMap[cargo] || '1'}`;
+
+      try {
+        // Chama a Serverless Function criada no Passo 1
+        const endpoint = `/api/apuracao?uf=al&mun=${escopoMun}&cargo=${cargo}&eleicao=619`;
+        const res = await fetch(endpoint);
+        const data = await res.json();
+
+        if (!res.ok || data.error) {
+          throw new Error(data.error || 'Dados não disponíveis.');
+        }
+
+        renderizarPainel(data);
+      } catch (err) {
+        container.innerHTML = `
+          <div class="bg-amber-950/40 border border-amber-800/60 rounded-lg p-4 text-center text-amber-200">
+            <i class="fa-solid fa-triangle-exclamation text-amber-400 text-xl mb-1"></i>
+            <p class="font-medium text-sm">Aguardando início da apuração oficial do TSE</p>
+            <p class="text-xs text-amber-400/80 mt-1">Os dados estarão disponíveis assim que as urnas forem encerradas e a contagem iniciada.</p>
+          </div>`;
+      }
+    }
+
+    function renderizarPainel(data) {
+      document.getElementById('lbl-horario').innerText = data.ht || new Date().toLocaleTimeString('pt-BR');
+
+      const pst = data.pst || '0,00';
+      document.getElementById('met-apurado').innerText = `${pst}%`;
+      document.getElementById('bar-apurado').style.width = `${pst.replace(',', '.')}%`;
+
+      document.getElementById('met-validos').innerText = parseInt(data.vv || 0).toLocaleString('pt-BR');
+      document.getElementById('met-bn').innerText = `${parseInt(data.vb || 0).toLocaleString('pt-BR')} / ${parseInt(data.tvn || 0).toLocaleString('pt-BR')}`;
+      document.getElementById('met-abstencao').innerText = parseInt(data.a || 0).toLocaleString('pt-BR');
+
+      const container = document.getElementById('container-candidatos');
+      container.innerHTML = '';
+
+      const candidatos = data.cand || [];
+      if (candidatos.length === 0) {
+        container.innerHTML = `<p class="text-center py-6 text-slate-400">Nenhum candidato localizado.</p>`;
+        return;
+      }
+
+      candidatos.forEach((cand, idx) => {
+        const pct = cand.pvap || '0,00';
+        const votos = parseInt(cand.vap || 0).toLocaleString('pt-BR');
+        const st = cand.st || 'Em apuração';
+        const isEleito = cand.e === 'S' || st.toLowerCase().includes('eleito');
+
+        let badgeHtml = `<span class="bg-slate-700 text-slate-300 text-xs px-2 py-0.5 rounded">${st}</span>`;
+        if (isEleito) {
+          badgeHtml = `<span class="bg-emerald-900/80 text-emerald-300 border border-emerald-700 text-xs font-semibold px-2.5 py-0.5 rounded flex items-center gap-1"><i class="fa-solid fa-check-double"></i> ELEITO</span>`;
+        }
+
+        const card = document.createElement('div');
+        card.className = `p-4 rounded-lg border transition-all ${isEleito ? 'bg-emerald-950/20 border-emerald-600/50' : 'bg-slate-900/60 border-slate-700/50'}`;
+        card.innerHTML = `
+          <div class="flex justify-between items-start gap-4">
+            <div class="flex items-center gap-3">
+              <span class="text-sm font-bold text-slate-500 w-6 text-center">#${idx + 1}</span>
+              <div>
+                <div class="flex items-center gap-2">
+                  <h3 class="font-bold text-white text-base">${cand.nm || cand.nmu}</h3>
+                  <span class="text-xs bg-slate-800 text-slate-400 font-mono px-2 py-0.5 rounded border border-slate-700">${cand.n}</span>
+                </div>
+                <p class="text-xs text-slate-400 mt-0.5">${cand.p || 'Partido'}</p>
+              </div>
+            </div>
+            <div class="text-right">
+              ${badgeHtml}
+              <p class="text-lg font-bold text-white mt-1">${pct}%</p>
+              <p class="text-xs text-slate-400">${votos} votos</p>
+            </div>
+          </div>
+          <div class="w-full bg-slate-800 rounded-full h-2 mt-3 overflow-hidden">
+            <div class="bg-emerald-500 h-2 rounded-full transition-all duration-500" style="width: ${pct.replace(',', '.')}%"></div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // Atualização automática a cada 10 segundos
+    setInterval(carregarDados, 10000);
+    // Primeira carga ao abrir
+    carregarDados();
+  </script>
+</body>
+</html>
