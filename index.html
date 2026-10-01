@@ -33,7 +33,7 @@
       <div class="flex items-center gap-2">
         <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Localidade:</label>
         <div class="inline-flex rounded-lg bg-slate-900 p-1 border border-slate-700">
-          <button id="btn-bm" onclick="setEscopo('27111')" class="px-3 py-1.5 rounded-md text-sm font-medium transition-all bg-emerald-600 text-white shadow">
+          <button id="btn-bm" onclick="setEscopo('27235')" class="px-3 py-1.5 rounded-md text-sm font-medium transition-all bg-emerald-600 text-white shadow">
             <i class="fa-solid fa-location-dot mr-1"></i> Boca da Mata (AL)
           </button>
           <button id="btn-al" onclick="setEscopo('')" class="px-3 py-1.5 rounded-md text-sm font-medium text-slate-400 hover:text-white transition-all">
@@ -102,14 +102,14 @@
   </main>
 
   <script>
-    let escopoMun = '27111'; // Boca da Mata (AL) por padrão
+    let escopoMun = '27235'; // Código oficial do TSE para Boca da Mata (AL)
 
     function setEscopo(mun) {
       escopoMun = mun;
       const btnBm = document.getElementById('btn-bm');
       const btnAl = document.getElementById('btn-al');
 
-      if (mun === '27111') {
+      if (mun === '27235') {
         btnBm.className = "px-3 py-1.5 rounded-md text-sm font-medium transition-all bg-emerald-600 text-white shadow";
         btnAl.className = "px-3 py-1.5 rounded-md text-sm font-medium text-slate-400 hover:text-white transition-all";
       } else {
@@ -127,8 +127,8 @@
       document.getElementById('lbl-vagas').innerText = `Vagas em disputa: ${vagasMap[cargo] || '1'}`;
 
       try {
-        // Chama a Serverless Function criada no Passo 1
-        const endpoint = `/api/apuracao?uf=al&mun=${escopoMun}&cargo=${cargo}&eleicao=619`;
+        // Consulta o backend intermediário da Vercel
+        const endpoint = `/api/apuracao?uf=al&mun=${escopoMun}&cargo=${cargo}`;
         const res = await fetch(endpoint);
         const data = await res.json();
 
@@ -154,7 +154,7 @@
       document.getElementById('met-apurado').innerText = `${pst}%`;
       document.getElementById('bar-apurado').style.width = `${pst.replace(',', '.')}%`;
 
-      document.getElementById('met-validos').innerText = parseInt(data.vv || 0).toLocaleString('pt-BR');
+      document.getElementById('met-validos').innerText = parseInt(data.vv || data.vvc || 0).toLocaleString('pt-BR');
       document.getElementById('met-bn').innerText = `${parseInt(data.vb || 0).toLocaleString('pt-BR')} / ${parseInt(data.tvn || 0).toLocaleString('pt-BR')}`;
       document.getElementById('met-abstencao').innerText = parseInt(data.a || 0).toLocaleString('pt-BR');
 
@@ -189,7 +189,7 @@
                   <h3 class="font-bold text-white text-base">${cand.nm || cand.nmu}</h3>
                   <span class="text-xs bg-slate-800 text-slate-400 font-mono px-2 py-0.5 rounded border border-slate-700">${cand.n}</span>
                 </div>
-                <p class="text-xs text-slate-400 mt-0.5">${cand.p || 'Partido'}</p>
+                <p class="text-xs text-slate-400 mt-0.5">${cand.p || cand.cc || 'Partido'}</p>
               </div>
             </div>
             <div class="text-right">
