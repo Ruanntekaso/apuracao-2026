@@ -26,6 +26,17 @@
 
   <main class="max-w-6xl mx-auto px-4 py-6 space-y-6">
 
+    <!-- Botão que só deve ser exibido se Boca da Mata for selecionada -->
+<div id="btn-urnas-container" style="display: none;">
+  <button 
+    id="btn-ver-urnas" 
+    onclick="toggleVisaoUrnas()"
+    class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-lg shadow flex items-center gap-2"
+  >
+    <span>🗳️</span> Ver Votos por Urna (Boca da Mata)
+  </button>
+</div>
+    
     <!-- Seleção de Localidade e Cargo -->
     <section class="bg-slate-800/80 p-4 rounded-xl border border-slate-700 flex flex-wrap gap-4 justify-between items-center">
       
