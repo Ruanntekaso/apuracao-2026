@@ -202,11 +202,11 @@
       if (mun === '27235') {
         btnBm.className = "px-3 py-1.5 rounded-md text-sm font-medium transition-all bg-emerald-600 text-white shadow";
         btnAl.className = "px-3 py-1.5 rounded-md text-sm font-medium text-slate-400 hover:text-white transition-all";
-        containerAbas.classList.remove('hidden'); // Exibe abas de visão em Boca da Mata
+        containerAbas.classList.remove('hidden');
       } else {
         btnAl.className = "px-3 py-1.5 rounded-md text-sm font-medium transition-all bg-emerald-600 text-white shadow";
         btnBm.className = "px-3 py-1.5 rounded-md text-sm font-medium text-slate-400 hover:text-white transition-all";
-        containerAbas.classList.add('hidden'); // Oculta visão por urnas no estado
+        containerAbas.classList.add('hidden');
         setVisao('geral');
       }
 
@@ -326,22 +326,51 @@
 
     // --- PAINEL DE URNAS DE BOCA DA MATA ---
     async function carregarUrnas() {
-      try {
-        const res = await fetch('/api/urnas');
-        if (!res.ok) throw new Error('Servidor indisponível');
-        dadosUrnasCache = await res.json();
-      } catch (e) {
-        // Mock de emergência para visualização instantânea no navegador
-        dadosUrnasCache = getMockUrnasBocaDaMata();
-      }
+      const cargo = document.getElementById('sel-cargo').value;
+      const containerLocais = document.getElementById('container-locais-secoes');
+      const containerDetalhe = document.getElementById('container-detalhe-urna');
 
-      popularSelectLocais(dadosUrnasCache.locaisVotacao);
-      filtrarUrnas();
+      try {
+        const res = await fetch(`/api/urnas?cargo=${cargo}`);
+        const data = await res.json();
+
+        // Tratamento para quando o TSE ainda não liberou os boletins de urna
+        if (data.aguardando || !data.locaisVotacao || data.locaisVotacao.length === 0) {
+          containerLocais.innerHTML = `
+            <div class="bg-amber-950/40 border border-amber-800/60 rounded-lg p-4 text-center text-amber-200">
+              <i class="fa-solid fa-triangle-exclamation text-amber-400 text-xl mb-1"></i>
+              <p class="font-medium text-sm">Aguardando transmissão das urnas pelo TSE</p>
+              <p class="text-xs text-amber-400/80 mt-1">${data.message || 'Os dados por seção estarão disponíveis assim que as urnas de Boca da Mata forem encerradas e transmitidas ao TSE.'}</p>
+            </div>`;
+
+          containerDetalhe.innerHTML = `
+            <div class="text-center py-16 text-slate-500">
+              <i class="fa-solid fa-clock text-2xl mb-2 text-slate-600"></i>
+              <p class="text-sm font-medium">Aguardando início da transmissão dos Boletins de Urna da 48ª Zona Eleitoral.</p>
+            </div>`;
+
+          document.getElementById('urnas-progresso-txt').innerText = "0 / 0";
+          document.getElementById('urnas-progresso-bar').style.width = "0%";
+          return;
+        }
+
+        dadosUrnasCache = data;
+        popularSelectLocais(dadosUrnasCache.locaisVotacao);
+        filtrarUrnas();
+      } catch (e) {
+        containerLocais.innerHTML = `
+          <div class="bg-amber-950/40 border border-amber-800/60 rounded-lg p-4 text-center text-amber-200">
+            <i class="fa-solid fa-triangle-exclamation text-amber-400 text-xl mb-1"></i>
+            <p class="font-medium text-sm">Aguardando início da apuração oficial pelo TSE</p>
+            <p class="text-xs text-amber-400/80 mt-1">Os dados por seção estarão disponíveis assim que as urnas de Boca da Mata forem transmitidas ao TSE.</p>
+          </div>`;
+      }
     }
 
     function popularSelectLocais(locais) {
       const select = document.getElementById('sel-local-votacao');
       select.innerHTML = '<option value="TODOS">Todos os Locais de Votação</option>';
+      if (!locais) return;
       locais.forEach(l => {
         const opt = document.createElement('option');
         opt.value = l.id;
@@ -351,7 +380,7 @@
     }
 
     function filtrarUrnas() {
-      if (!dadosUrnasCache) return;
+      if (!dadosUrnasCache || !dadosUrnasCache.locaisVotacao) return;
 
       const localId = document.getElementById('sel-local-votacao').value;
       const buscaSecao = document.getElementById('ipt-busca-secao').value.trim();
@@ -371,9 +400,8 @@
       const container = document.getElementById('container-locais-secoes');
       container.innerHTML = '';
 
-      // Atualiza o progresso global
-      document.getElementById('urnas-progresso-txt').innerText = `${dadosUrnasCache.secoesApuradas} / ${dadosUrnasCache.totalSecoes}`;
-      document.getElementById('urnas-progresso-bar').style.width = `${dadosUrnasCache.percentualApurado}%`;
+      document.getElementById('urnas-progresso-txt').innerText = `${dadosUrnasCache.secoesApuradas || 0} / ${dadosUrnasCache.totalSecoes || 0}`;
+      document.getElementById('urnas-progresso-bar').style.width = `${dadosUrnasCache.percentualApurado || 0}%`;
 
       if (locais.length === 0) {
         container.innerHTML = '<p class="text-center py-8 text-slate-500 text-xs">Nenhuma seção localizada para o filtro digitado.</p>';
@@ -410,7 +438,6 @@
         container.appendChild(divLocal);
       });
 
-      // Seleciona a primeira seção automaticamente se nenhuma estiver aberta
       if (!secaoSelecionada && locais[0]?.secoes[0]) {
         selecionarSecao(locais[0].secoes[0], locais[0].nome);
       }
@@ -425,7 +452,7 @@
       const container = document.getElementById('container-detalhe-urna');
 
       let candidatosHtml = '';
-      secao.candidatos.forEach((c, idx) => {
+      secao.candidatos.forEach((c) => {
         candidatosHtml += `
           <div class="bg-slate-800/80 p-3 rounded-lg border border-slate-700/60">
             <div class="flex justify-between items-center mb-1">
@@ -482,96 +509,6 @@
           <div class="space-y-2">${candidatosHtml}</div>
         </div>
       `;
-    }
-
-    // Mock local automático de Boca da Mata
-    function getMockUrnasBocaDaMata() {
-      return {
-        municipio: "Boca da Mata",
-        uf: "AL",
-        totalSecoes: 42,
-        secoesApuradas: 35,
-        percentualApurado: 83.33,
-        locaisVotacao: [
-          {
-            id: "loc-1",
-            nome: "Escola Municipal Monsenhor Claranha",
-            bairro: "Centro",
-            secoes: [
-              {
-                numeroSecao: "0012",
-                status: "TOTALIZADA",
-                eleitoresAptos: 340,
-                comparecimento: 285,
-                votosValidos: 268,
-                votosBrancos: 7,
-                votosNulos: 10,
-                candidatos: [
-                  { numero: "13", nome: "Candidato A", partido: "PT", votos: 145, porcentagem: "54.10" },
-                  { numero: "22", nome: "Candidato B", partido: "PL", votos: 110, porcentagem: "41.04" },
-                  { numero: "15", nome: "Candidato C", partido: "MDB", votos: 13, porcentagem: "4.85" }
-                ]
-              },
-              {
-                numeroSecao: "0013",
-                status: "TOTALIZADA",
-                eleitoresAptos: 350,
-                comparecimento: 298,
-                votosValidos: 280,
-                votosBrancos: 5,
-                votosNulos: 13,
-                candidatos: [
-                  { numero: "13", nome: "Candidato A", partido: "PT", votos: 152, porcentagem: "54.28" },
-                  { numero: "22", nome: "Candidato B", partido: "PL", votos: 118, porcentagem: "42.14" },
-                  { numero: "15", nome: "Candidato C", partido: "MDB", votos: 10, porcentagem: "3.57" }
-                ]
-              }
-            ]
-          },
-          {
-            id: "loc-2",
-            nome: "Escola Estadual Prof. Alexandre Alves",
-            bairro: "Bairro Novo",
-            secoes: [
-              {
-                numeroSecao: "0020",
-                status: "TOTALIZADA",
-                eleitoresAptos: 380,
-                comparecimento: 310,
-                votosValidos: 295,
-                votosBrancos: 6,
-                votosNulos: 9,
-                candidatos: [
-                  { numero: "22", nome: "Candidato B", partido: "PL", votos: 160, porcentagem: "54.23" },
-                  { numero: "13", nome: "Candidato A", partido: "PT", votos: 125, porcentagem: "42.37" },
-                  { numero: "15", nome: "Candidato C", partido: "MDB", votos: 10, porcentagem: "3.38" }
-                ]
-              }
-            ]
-          },
-          {
-            id: "loc-3",
-            nome: "Escola Municipal Deputado José Medeiros",
-            bairro: "Centro",
-            secoes: [
-              {
-                numeroSecao: "0030",
-                status: "TOTALIZADA",
-                eleitoresAptos: 310,
-                comparecimento: 260,
-                votosValidos: 245,
-                votosBrancos: 8,
-                votosNulos: 7,
-                candidatos: [
-                  { numero: "13", nome: "Candidato A", partido: "PT", votos: 135, porcentagem: "55.10" },
-                  { numero: "22", nome: "Candidato B", partido: "PL", votos: 100, porcentagem: "40.81" },
-                  { numero: "15", nome: "Candidato C", partido: "MDB", votos: 10, porcentagem: "4.08" }
-                ]
-              }
-            ]
-          }
-        ]
-      };
     }
 
     // Atualização automática
