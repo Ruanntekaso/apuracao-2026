@@ -235,6 +235,92 @@
       });
     }
 
+    // Variável global para controlar se a visão de urnas está ativa
+let vendoUrnas = false;
+
+// Função chamada sempre que o usuário muda a cidade selecionada no seu select/filtro
+function aoMudarCidade(codigoMunicipioOuNome) {
+  const btnUrnas = document.getElementById('btn-urnas-container');
+  const painelUrnas = document.getElementById('painel-urnas-boca-da-mata');
+  
+  // Verifica se a cidade escolhida é Boca da Mata (Código TSE: 27057 ou nome "boca da mata")
+  const eBocaDaMata = codigoMunicipioOuNome === '27057' || 
+                      String(codigoMunicipioOuNome).toLowerCase().includes('boca da mata');
+
+  if (eBocaDaMata) {
+    btnUrnas.style.display = 'block'; // Mostra o botão exclusivo de Boca da Mata
+  } else {
+    btnUrnas.style.display = 'none';  // Oculta em Alagoas e outras cidades
+    painelUrnas.style.display = 'none';
+    document.getElementById('seu-container-apuracao-geral').style.display = 'block'; // Garante apuração geral
+    vendoUrnas = false;
+  }
+}
+
+// Alterna entre Apuração Geral e Urna por Urna
+async function toggleVisaoUrnas() {
+  const painelUrnas = document.getElementById('painel-urnas-boca-da-mata');
+  const apuracaoGeral = document.getElementById('seu-container-apuracao-geral'); // Substitua pelo ID do seu container geral
+
+  vendoUrnas = !vendoUrnas;
+
+  if (vendoUrnas) {
+    if (apuracaoGeral) apuracaoGeral.style.display = 'none';
+    painelUrnas.style.display = 'block';
+    await carregarEExibirUrnas();
+  } else {
+    painelUrnas.style.display = 'none';
+    if (apuracaoGeral) apuracaoGeral.style.display = 'block';
+  }
+}
+
+// Busca os dados da API /api/urnas e renderiza na tela
+async function carregarEExibirUrnas() {
+  const container = document.getElementById('conteudo-urnas-lista');
+  container.innerHTML = '<div class="text-gray-400 p-4">Carregando seções de Boca da Mata...</div>';
+
+  try {
+    const resposta = await fetch('/api/urnas');
+    const dados = await resposta.json();
+
+    let html = '';
+
+    dados.locaisVotacao.forEach(local => {
+      html += `
+        <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 mb-4">
+          <h3 class="text-emerald-400 font-bold text-lg mb-1">${local.nome}</h3>
+          <p class="text-xs text-gray-400 mb-3">${local.endereco} - ${local.bairro}</p>
+          
+          <div class="space-y-3">
+            ${local.secoes.map(secao => `
+              <div class="bg-gray-900 p-3 rounded-lg border border-gray-800">
+                <div class="flex justify-between items-center mb-2">
+                  <span class="font-extrabold text-sm text-white">Seção ${secao.numeroSecao}</span>
+                  <span class="text-xs font-bold text-emerald-400">${secao.votosValidos} Votos Válidos</span>
+                </div>
+                
+                <div class="space-y-1">
+                  ${secao.candidatos.map(c => `
+                    <div class="flex justify-between text-xs">
+                      <span class="text-gray-300">${c.numero} - ${c.nome} (${c.partido})</span>
+                      <span class="font-bold text-white">${c.votos} votos (${c.porcentagem}%)</span>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    });
+
+    container.innerHTML = html;
+  } catch (erro) {
+    console.error("Erro ao carregar urnas:", erro);
+    container.innerHTML = '<div class="text-red-400 p-4">Erro ao carregar dados das urnas.</div>';
+  }
+}
+    
     // Atualização automática a cada 10 segundos
     setInterval(carregarDados, 10000);
     // Primeira carga ao abrir
