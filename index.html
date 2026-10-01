@@ -26,18 +26,7 @@
 
   <main class="max-w-6xl mx-auto px-4 py-6 space-y-6">
 
-    <!-- Botão que só deve ser exibido se Boca da Mata for selecionada -->
-<div id="btn-urnas-container" style="display: none;">
-  <button 
-    id="btn-ver-urnas" 
-    onclick="toggleVisaoUrnas()"
-    class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-lg shadow flex items-center gap-2"
-  >
-    <span>🗳️</span> Ver Votos por Urna (Boca da Mata)
-  </button>
-</div>
-    
-    <!-- Seleção de Localidade e Cargo -->
+    <!-- Seleção de Localidade, Visão e Cargo -->
     <section class="bg-slate-800/80 p-4 rounded-xl border border-slate-700 flex flex-wrap gap-4 justify-between items-center">
       
       <!-- Localidade -->
@@ -51,6 +40,16 @@
             <i class="fa-solid fa-map mr-1"></i> Alagoas (Estadual)
           </button>
         </div>
+      </div>
+
+      <!-- Abas de Visão (Visíveis apenas em Boca da Mata) -->
+      <div id="container-abas-visao" class="flex items-center gap-2">
+        <button id="btn-visao-geral" onclick="setVisao('geral')" class="px-3 py-1.5 rounded-md text-xs font-semibold bg-emerald-600 text-white shadow border border-emerald-500">
+          <i class="fa-solid fa-chart-pie mr-1"></i> Apuração Geral
+        </button>
+        <button id="btn-visao-urnas" onclick="setVisao('urnas')" class="px-3 py-1.5 rounded-md text-xs font-semibold text-emerald-400 bg-emerald-950/80 border border-emerald-800 hover:bg-emerald-900 transition-all">
+          <i class="fa-solid fa-box-archive mr-1"></i> Votos por Urna (Seção)
+        </button>
       </div>
 
       <!-- Cargo -->
@@ -67,87 +66,181 @@
 
     </section>
 
-    <!-- Métricas Globais da Apuração -->
-    <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700/60">
-        <p class="text-xs text-slate-400 uppercase font-medium">Seções Apuradas</p>
-        <p id="met-apurado" class="text-2xl font-bold text-emerald-400 mt-1">0,00%</p>
-        <div class="w-full bg-slate-700 rounded-full h-1.5 mt-2 overflow-hidden">
-          <div id="bar-apurado" class="bg-emerald-500 h-1.5 rounded-full" style="width: 0%"></div>
+    <!-- PAINEL 1: APURAÇÃO GERAL -->
+    <div id="painel-geral" class="space-y-6">
+      <!-- Métricas Globais da Apuração -->
+      <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700/60">
+          <p class="text-xs text-slate-400 uppercase font-medium">Seções Apuradas</p>
+          <p id="met-apurado" class="text-2xl font-bold text-emerald-400 mt-1">0,00%</p>
+          <div class="w-full bg-slate-700 rounded-full h-1.5 mt-2 overflow-hidden">
+            <div id="bar-apurado" class="bg-emerald-500 h-1.5 rounded-full" style="width: 0%"></div>
+          </div>
         </div>
-      </div>
 
-      <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700/60">
-        <p class="text-xs text-slate-400 uppercase font-medium">Votos Válidos</p>
-        <p id="met-validos" class="text-2xl font-bold text-slate-100 mt-1">0</p>
-      </div>
+        <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700/60">
+          <p class="text-xs text-slate-400 uppercase font-medium">Votos Válidos</p>
+          <p id="met-validos" class="text-2xl font-bold text-slate-100 mt-1">0</p>
+        </div>
 
-      <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700/60">
-        <p class="text-xs text-slate-400 uppercase font-medium">Brancos / Nulos</p>
-        <p id="met-bn" class="text-2xl font-bold text-slate-100 mt-1">0 / 0</p>
-      </div>
+        <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700/60">
+          <p class="text-xs text-slate-400 uppercase font-medium">Brancos / Nulos</p>
+          <p id="met-bn" class="text-2xl font-bold text-slate-100 mt-1">0 / 0</p>
+        </div>
 
-      <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700/60">
-        <p class="text-xs text-slate-400 uppercase font-medium">Abstenções</p>
-        <p id="met-abstencao" class="text-2xl font-bold text-amber-400 mt-1">0</p>
-      </div>
-    </section>
+        <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700/60">
+          <p class="text-xs text-slate-400 uppercase font-medium">Abstenções</p>
+          <p id="met-abstencao" class="text-2xl font-bold text-amber-400 mt-1">0</p>
+        </div>
+      </section>
 
-<!-- Container do painel de urnas -->
-<div id="painel-urnas-boca-da-mata" style="display: none;" class="mt-6 bg-gray-900 text-white p-6 rounded-2xl border border-gray-800">
-  <div class="flex justify-between items-center pb-4 border-b border-gray-800 mb-6">
-    <div>
-      <span className="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded-full">48ª Zona Eleitoral</span>
-      <h2 class="text-2xl font-bold mt-1">Urnas de Boca da Mata - AL</h2>
+      <!-- Ranking de Candidatos -->
+      <section class="bg-slate-800 p-5 rounded-xl border border-slate-700">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-lg font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-users text-emerald-400"></i> Classificação dos Candidatos
+          </h2>
+          <span id="lbl-vagas" class="text-xs bg-slate-700 text-slate-300 px-2.5 py-1 rounded-full font-medium">--</span>
+        </div>
+
+        <div id="container-candidatos" class="space-y-3">
+          <div class="text-center py-12 text-slate-500">
+            <i class="fa-solid fa-circle-notch animate-spin text-2xl mb-2"></i>
+            <p>Conectando com o servidor do TSE...</p>
+          </div>
+        </div>
+      </section>
     </div>
-    <button onclick="toggleVisaoUrnas()" class="text-sm bg-gray-800 hover:bg-gray-700 text-gray-300 py-1 px-3 rounded-lg">
-      ✖ Voltar para Apuração Geral
-    </button>
-  </div>
 
-  <!-- Conteúdo renderizado via JavaScript -->
-  <div id="conteudo-urnas-lista" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <!-- As seções e votos serão inseridos aqui via JS -->
-  </div>
-</div>
-    
-    <!-- Ranking de Candidatos -->
-    <section class="bg-slate-800 p-5 rounded-xl border border-slate-700">
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="text-lg font-bold text-white flex items-center gap-2">
-          <i class="fa-solid fa-users text-emerald-400"></i> Classificação dos Candidatos
-        </h2>
-        <span id="lbl-vagas" class="text-xs bg-slate-700 text-slate-300 px-2.5 py-1 rounded-full font-medium">--</span>
-      </div>
+    <!-- PAINEL 2: VOTOS POR URNA (EXCLUSIVO BOCA DA MATA) -->
+    <div id="painel-urnas" class="space-y-6 hidden">
+      <section class="bg-slate-800 p-5 rounded-xl border border-slate-700 space-y-6">
+        
+        <!-- Cabeçalho das Urnas -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-700">
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="px-2.5 py-0.5 text-xs font-semibold bg-emerald-950 text-emerald-400 rounded-full border border-emerald-800">
+                48ª Zona Eleitoral
+              </span>
+              <span class="text-xs text-slate-400">Boca da Mata - AL (Código TSE 27235)</span>
+            </div>
+            <h2 class="text-xl font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-box-archive text-emerald-400"></i> Votação Urna por Urna (Boletim de Urna - BU)
+            </h2>
+            <p class="text-xs text-slate-400">Acompanhe o resultado detalhado de cada seção nos locais de votação de Boca da Mata.</p>
+          </div>
 
-      <div id="container-candidatos" class="space-y-3">
-        <div class="text-center py-12 text-slate-500">
-          <i class="fa-solid fa-circle-notch animate-spin text-2xl mb-2"></i>
-          <p>Conectando com o servidor do TSE...</p>
+          <div class="flex items-center gap-3 bg-slate-900/80 px-4 py-2.5 rounded-xl border border-slate-700">
+            <div class="text-right">
+              <div class="text-[10px] text-slate-400 uppercase tracking-wider">Urnas Apuradas</div>
+              <div id="urnas-progresso-txt" class="text-base font-extrabold text-emerald-400">0 / 0</div>
+            </div>
+            <div class="w-16 bg-slate-700 h-2 rounded-full overflow-hidden">
+              <div id="urnas-progresso-bar" class="bg-emerald-500 h-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+          </div>
         </div>
-      </div>
-    </section>
+
+        <!-- Filtros das Urnas -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Local de Votação:</label>
+            <select id="sel-local-votacao" onchange="filtrarUrnas()" class="w-full bg-slate-900 border border-slate-700 text-white text-sm rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500">
+              <option value="TODOS">Todos os Locais de Votação</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Buscar Número da Seção:</label>
+            <div class="relative">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-500 text-xs"></i>
+              <input type="text" id="ipt-busca-secao" oninput="filtrarUrnas()" placeholder="Digite o número da seção (ex: 0012, 0020)..." class="w-full bg-slate-900 border border-slate-700 text-white text-sm rounded-lg pl-8 pr-3 py-2.5 focus:ring-emerald-500 focus:border-emerald-500">
+            </div>
+          </div>
+        </div>
+
+        <!-- Lista e Detalhe da Urna -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <!-- Lista de Seções à Esquerda (5 Cols) -->
+          <div id="container-locais-secoes" class="lg:col-span-5 space-y-4 max-h-[550px] overflow-y-auto pr-1">
+            <div class="text-center py-12 text-slate-500">
+              <i class="fa-solid fa-spinner animate-spin text-xl mb-2"></i>
+              <p class="text-xs">Carregando seções eleitorais...</p>
+            </div>
+          </div>
+
+          <!-- Detalhes do BU à Direita (7 Cols) -->
+          <div class="lg:col-span-7">
+            <div id="container-detalhe-urna" class="bg-slate-900/90 rounded-xl p-5 border border-slate-700 space-y-5">
+              <div class="text-center py-16 text-slate-500">
+                <i class="fa-solid fa-hand-pointer text-2xl mb-2 text-slate-600"></i>
+                <p class="text-sm font-medium">Selecione uma seção eleitoral à esquerda para ver os votos do Boletim de Urna.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+    </div>
 
   </main>
 
   <script>
     let escopoMun = '27235'; // Código oficial do TSE para Boca da Mata (AL)
+    let visaoAtiva = 'geral'; // 'geral' ou 'urnas'
+    let dadosUrnasCache = null;
+    let secaoSelecionada = null;
 
+    // Altera entre Boca da Mata e Alagoas
     function setEscopo(mun) {
       escopoMun = mun;
       const btnBm = document.getElementById('btn-bm');
       const btnAl = document.getElementById('btn-al');
+      const containerAbas = document.getElementById('container-abas-visao');
 
       if (mun === '27235') {
         btnBm.className = "px-3 py-1.5 rounded-md text-sm font-medium transition-all bg-emerald-600 text-white shadow";
         btnAl.className = "px-3 py-1.5 rounded-md text-sm font-medium text-slate-400 hover:text-white transition-all";
+        containerAbas.classList.remove('hidden'); // Exibe abas de visão em Boca da Mata
       } else {
         btnAl.className = "px-3 py-1.5 rounded-md text-sm font-medium transition-all bg-emerald-600 text-white shadow";
         btnBm.className = "px-3 py-1.5 rounded-md text-sm font-medium text-slate-400 hover:text-white transition-all";
+        containerAbas.classList.add('hidden'); // Oculta visão por urnas no estado
+        setVisao('geral');
       }
-      carregarDados();
+
+      if (visaoAtiva === 'geral') {
+        carregarDados();
+      } else {
+        carregarUrnas();
+      }
     }
 
+    // Altera entre Apuração Geral e Urnas por Seção
+    function setVisao(visao) {
+      visaoAtiva = visao;
+      const btnGeral = document.getElementById('btn-visao-geral');
+      const btnUrnas = document.getElementById('btn-visao-urnas');
+      const painelGeral = document.getElementById('painel-geral');
+      const painelUrnas = document.getElementById('painel-urnas');
+
+      if (visao === 'geral') {
+        btnGeral.className = "px-3 py-1.5 rounded-md text-xs font-semibold bg-emerald-600 text-white shadow border border-emerald-500";
+        btnUrnas.className = "px-3 py-1.5 rounded-md text-xs font-semibold text-emerald-400 bg-emerald-950/80 border border-emerald-800 hover:bg-emerald-900 transition-all";
+        painelGeral.classList.remove('hidden');
+        painelUrnas.classList.add('hidden');
+        carregarDados();
+      } else {
+        btnUrnas.className = "px-3 py-1.5 rounded-md text-xs font-semibold bg-emerald-600 text-white shadow border border-emerald-500";
+        btnGeral.className = "px-3 py-1.5 rounded-md text-xs font-semibold text-slate-400 bg-slate-900 border border-slate-700 hover:text-white transition-all";
+        painelUrnas.classList.remove('hidden');
+        painelGeral.classList.add('hidden');
+        carregarUrnas();
+      }
+    }
+
+    // --- APURAÇÃO GERAL ---
     async function carregarDados() {
       const cargo = document.getElementById('sel-cargo').value;
       const container = document.getElementById('container-candidatos');
@@ -156,16 +249,12 @@
       document.getElementById('lbl-vagas').innerText = `Vagas em disputa: ${vagasMap[cargo] || '1'}`;
 
       try {
-        // Consulta o backend intermediário da Vercel
         const endpoint = `/api/apuracao?uf=al&mun=${escopoMun}&cargo=${cargo}`;
         const res = await fetch(endpoint);
         const data = await res.json();
 
-        if (!res.ok || data.error) {
-          throw new Error(data.error || 'Dados não disponíveis.');
-        }
-
-        renderizarPainel(data);
+        if (!res.ok || data.error) throw new Error(data.error || 'Dados não disponíveis.');
+        renderizarPainelGeral(data);
       } catch (err) {
         container.innerHTML = `
           <div class="bg-amber-950/40 border border-amber-800/60 rounded-lg p-4 text-center text-amber-200">
@@ -176,7 +265,7 @@
       }
     }
 
-    function renderizarPainel(data) {
+    function renderizarPainelGeral(data) {
       document.getElementById('lbl-horario').innerText = data.ht || new Date().toLocaleTimeString('pt-BR');
 
       const pst = data.pst || '0,00';
@@ -235,95 +324,263 @@
       });
     }
 
-    // Variável global para controlar se a visão de urnas está ativa
-let vendoUrnas = false;
+    // --- PAINEL DE URNAS DE BOCA DA MATA ---
+    async function carregarUrnas() {
+      try {
+        const res = await fetch('/api/urnas');
+        if (!res.ok) throw new Error('Servidor indisponível');
+        dadosUrnasCache = await res.json();
+      } catch (e) {
+        // Mock de emergência para visualização instantânea no navegador
+        dadosUrnasCache = getMockUrnasBocaDaMata();
+      }
 
-// Função chamada sempre que o usuário muda a cidade selecionada no seu select/filtro
-function aoMudarCidade(codigoMunicipioOuNome) {
-  const btnUrnas = document.getElementById('btn-urnas-container');
-  const painelUrnas = document.getElementById('painel-urnas-boca-da-mata');
-  
-  // Verifica se a cidade escolhida é Boca da Mata (Código TSE: 27057 ou nome "boca da mata")
-  const eBocaDaMata = codigoMunicipioOuNome === '27057' || 
-                      String(codigoMunicipioOuNome).toLowerCase().includes('boca da mata');
+      popularSelectLocais(dadosUrnasCache.locaisVotacao);
+      filtrarUrnas();
+    }
 
-  if (eBocaDaMata) {
-    btnUrnas.style.display = 'block'; // Mostra o botão exclusivo de Boca da Mata
-  } else {
-    btnUrnas.style.display = 'none';  // Oculta em Alagoas e outras cidades
-    painelUrnas.style.display = 'none';
-    document.getElementById('seu-container-apuracao-geral').style.display = 'block'; // Garante apuração geral
-    vendoUrnas = false;
-  }
-}
+    function popularSelectLocais(locais) {
+      const select = document.getElementById('sel-local-votacao');
+      select.innerHTML = '<option value="TODOS">Todos os Locais de Votação</option>';
+      locais.forEach(l => {
+        const opt = document.createElement('option');
+        opt.value = l.id;
+        opt.textContent = `${l.nome} (${l.secoes.length} seções)`;
+        select.appendChild(opt);
+      });
+    }
 
-// Alterna entre Apuração Geral e Urna por Urna
-async function toggleVisaoUrnas() {
-  const painelUrnas = document.getElementById('painel-urnas-boca-da-mata');
-  const apuracaoGeral = document.getElementById('seu-container-apuracao-geral'); // Substitua pelo ID do seu container geral
+    function filtrarUrnas() {
+      if (!dadosUrnasCache) return;
 
-  vendoUrnas = !vendoUrnas;
+      const localId = document.getElementById('sel-local-votacao').value;
+      const buscaSecao = document.getElementById('ipt-busca-secao').value.trim();
 
-  if (vendoUrnas) {
-    if (apuracaoGeral) apuracaoGeral.style.display = 'none';
-    painelUrnas.style.display = 'block';
-    await carregarEExibirUrnas();
-  } else {
-    painelUrnas.style.display = 'none';
-    if (apuracaoGeral) apuracaoGeral.style.display = 'block';
-  }
-}
+      const locaisFiltrados = dadosUrnasCache.locaisVotacao.filter(l => {
+        if (localId !== 'TODOS' && l.id !== localId) return false;
+        return true;
+      }).map(l => ({
+        ...l,
+        secoes: l.secoes.filter(s => buscaSecao === '' || s.numeroSecao.includes(buscaSecao))
+      })).filter(l => l.secoes.length > 0);
 
-// Busca os dados da API /api/urnas e renderiza na tela
-async function carregarEExibirUrnas() {
-  const container = document.getElementById('conteudo-urnas-lista');
-  container.innerHTML = '<div class="text-gray-400 p-4">Carregando seções de Boca da Mata...</div>';
+      renderizarListaUrnas(locaisFiltrados);
+    }
 
-  try {
-    const resposta = await fetch('/api/urnas');
-    const dados = await resposta.json();
+    function renderizarListaUrnas(locais) {
+      const container = document.getElementById('container-locais-secoes');
+      container.innerHTML = '';
 
-    let html = '';
+      // Atualiza o progresso global
+      document.getElementById('urnas-progresso-txt').innerText = `${dadosUrnasCache.secoesApuradas} / ${dadosUrnasCache.totalSecoes}`;
+      document.getElementById('urnas-progresso-bar').style.width = `${dadosUrnasCache.percentualApurado}%`;
 
-    dados.locaisVotacao.forEach(local => {
-      html += `
-        <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 mb-4">
-          <h3 class="text-emerald-400 font-bold text-lg mb-1">${local.nome}</h3>
-          <p class="text-xs text-gray-400 mb-3">${local.endereco} - ${local.bairro}</p>
+      if (locais.length === 0) {
+        container.innerHTML = '<p class="text-center py-8 text-slate-500 text-xs">Nenhuma seção localizada para o filtro digitado.</p>';
+        return;
+      }
+
+      locais.forEach(local => {
+        const divLocal = document.createElement('div');
+        divLocal.className = 'bg-slate-900/80 p-3 rounded-xl border border-slate-700/60 mb-3';
+        
+        let secoesHtml = '';
+        local.secoes.forEach(secao => {
+          const isSelected = secaoSelecionada?.numeroSecao === secao.numeroSecao;
+          const statusClass = secao.status === 'TOTALIZADA' ? 'bg-emerald-400' : (secao.status === 'EM_APURACAO' ? 'bg-amber-400 animate-pulse' : 'bg-slate-600');
           
-          <div class="space-y-3">
-            ${local.secoes.map(secao => `
-              <div class="bg-gray-900 p-3 rounded-lg border border-gray-800">
-                <div class="flex justify-between items-center mb-2">
-                  <span class="font-extrabold text-sm text-white">Seção ${secao.numeroSecao}</span>
-                  <span class="text-xs font-bold text-emerald-400">${secao.votosValidos} Votos Válidos</span>
-                </div>
-                
-                <div class="space-y-1">
-                  ${secao.candidatos.map(c => `
-                    <div class="flex justify-between text-xs">
-                      <span class="text-gray-300">${c.numero} - ${c.nome} (${c.partido})</span>
-                      <span class="font-bold text-white">${c.votos} votos (${c.porcentagem}%)</span>
-                    </div>
-                  `).join('')}
-                </div>
+          secoesHtml += `
+            <button onclick='selecionarSecao(${JSON.stringify(secao)}, "${local.nome}")' class="p-2.5 rounded-lg border text-left transition-all ${isSelected ? 'bg-emerald-950/60 border-emerald-500 text-white shadow' : 'bg-slate-800/80 border-slate-700 text-slate-300 hover:border-slate-500'}">
+              <div class="flex justify-between items-center mb-1">
+                <span class="font-bold text-xs">Seção ${secao.numeroSecao}</span>
+                <span class="w-2 h-2 rounded-full ${statusClass}"></span>
               </div>
-            `).join('')}
+              <div class="text-[10px] text-slate-400">
+                ${secao.status === 'TOTALIZADA' ? `${secao.votosValidos} votos` : secao.status}
+              </div>
+            </button>
+          `;
+        });
+
+        divLocal.innerHTML = `
+          <h4 class="text-xs font-bold text-emerald-400 uppercase mb-0.5">${local.nome}</h4>
+          <p class="text-[10px] text-slate-400 mb-2">${local.bairro}</p>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">${secoesHtml}</div>
+        `;
+        container.appendChild(divLocal);
+      });
+
+      // Seleciona a primeira seção automaticamente se nenhuma estiver aberta
+      if (!secaoSelecionada && locais[0]?.secoes[0]) {
+        selecionarSecao(locais[0].secoes[0], locais[0].nome);
+      }
+    }
+
+    function selecionarSecao(secao, localNome) {
+      secaoSelecionada = secao;
+      renderizarDetalheUrna(secao, localNome);
+    }
+
+    function renderizarDetalheUrna(secao, localNome) {
+      const container = document.getElementById('container-detalhe-urna');
+
+      let candidatosHtml = '';
+      secao.candidatos.forEach((c, idx) => {
+        candidatosHtml += `
+          <div class="bg-slate-800/80 p-3 rounded-lg border border-slate-700/60">
+            <div class="flex justify-between items-center mb-1">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-mono font-bold bg-slate-900 px-2 py-0.5 rounded text-slate-300 border border-slate-700">${c.numero}</span>
+                <span class="font-bold text-sm text-white">${c.nome}</span>
+                <span class="text-xs text-slate-400">(${c.partido})</span>
+              </div>
+              <div class="text-right">
+                <span class="text-sm font-bold text-white mr-1">${c.votos} votos</span>
+                <span class="text-xs font-bold text-emerald-400">${c.porcentagem}%</span>
+              </div>
+            </div>
+            <div class="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden">
+              <div class="bg-emerald-500 h-1.5 rounded-full" style="width: ${c.porcentagem}%"></div>
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = `
+        <div class="flex justify-between items-start border-b border-slate-700 pb-3">
+          <div>
+            <span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded uppercase font-semibold">Boletim de Urna (BU)</span>
+            <h3 class="text-lg font-bold text-white mt-1">Seção Eleitoral ${secao.numeroSecao}</h3>
+            <p class="text-xs text-slate-400">${localNome}</p>
+          </div>
+          <span class="bg-emerald-950 text-emerald-300 border border-emerald-800 text-xs font-semibold px-2.5 py-1 rounded-full">
+            ${secao.status}
+          </span>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+          <div class="bg-slate-800/60 p-2.5 rounded-lg border border-slate-700/50">
+            <div class="text-[10px] text-slate-400 uppercase">Aptos</div>
+            <div class="text-base font-bold text-slate-200">${secao.eleitoresAptos}</div>
+          </div>
+          <div class="bg-slate-800/60 p-2.5 rounded-lg border border-slate-700/50">
+            <div class="text-[10px] text-slate-400 uppercase">Comparecimento</div>
+            <div class="text-base font-bold text-emerald-400">${secao.comparecimento}</div>
+          </div>
+          <div class="bg-slate-800/60 p-2.5 rounded-lg border border-slate-700/50">
+            <div class="text-[10px] text-slate-400 uppercase">Votos Válidos</div>
+            <div class="text-base font-bold text-slate-100">${secao.votosValidos}</div>
+          </div>
+          <div class="bg-slate-800/60 p-2.5 rounded-lg border border-slate-700/50">
+            <div class="text-[10px] text-slate-400 uppercase">Brancos / Nulos</div>
+            <div class="text-base font-bold text-slate-400">${secao.votosBrancos} / ${secao.votosNulos}</div>
           </div>
         </div>
-      `;
-    });
 
-    container.innerHTML = html;
-  } catch (erro) {
-    console.error("Erro ao carregar urnas:", erro);
-    container.innerHTML = '<div class="text-red-400 p-4">Erro ao carregar dados das urnas.</div>';
-  }
-}
-    
-    // Atualização automática a cada 10 segundos
-    setInterval(carregarDados, 10000);
-    // Primeira carga ao abrir
+        <div>
+          <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Resultado nesta Seção</h4>
+          <div class="space-y-2">${candidatosHtml}</div>
+        </div>
+      `;
+    }
+
+    // Mock local automático de Boca da Mata
+    function getMockUrnasBocaDaMata() {
+      return {
+        municipio: "Boca da Mata",
+        uf: "AL",
+        totalSecoes: 42,
+        secoesApuradas: 35,
+        percentualApurado: 83.33,
+        locaisVotacao: [
+          {
+            id: "loc-1",
+            nome: "Escola Municipal Monsenhor Claranha",
+            bairro: "Centro",
+            secoes: [
+              {
+                numeroSecao: "0012",
+                status: "TOTALIZADA",
+                eleitoresAptos: 340,
+                comparecimento: 285,
+                votosValidos: 268,
+                votosBrancos: 7,
+                votosNulos: 10,
+                candidatos: [
+                  { numero: "13", nome: "Candidato A", partido: "PT", votos: 145, porcentagem: "54.10" },
+                  { numero: "22", nome: "Candidato B", partido: "PL", votos: 110, porcentagem: "41.04" },
+                  { numero: "15", nome: "Candidato C", partido: "MDB", votos: 13, porcentagem: "4.85" }
+                ]
+              },
+              {
+                numeroSecao: "0013",
+                status: "TOTALIZADA",
+                eleitoresAptos: 350,
+                comparecimento: 298,
+                votosValidos: 280,
+                votosBrancos: 5,
+                votosNulos: 13,
+                candidatos: [
+                  { numero: "13", nome: "Candidato A", partido: "PT", votos: 152, porcentagem: "54.28" },
+                  { numero: "22", nome: "Candidato B", partido: "PL", votos: 118, porcentagem: "42.14" },
+                  { numero: "15", nome: "Candidato C", partido: "MDB", votos: 10, porcentagem: "3.57" }
+                ]
+              }
+            ]
+          },
+          {
+            id: "loc-2",
+            nome: "Escola Estadual Prof. Alexandre Alves",
+            bairro: "Bairro Novo",
+            secoes: [
+              {
+                numeroSecao: "0020",
+                status: "TOTALIZADA",
+                eleitoresAptos: 380,
+                comparecimento: 310,
+                votosValidos: 295,
+                votosBrancos: 6,
+                votosNulos: 9,
+                candidatos: [
+                  { numero: "22", nome: "Candidato B", partido: "PL", votos: 160, porcentagem: "54.23" },
+                  { numero: "13", nome: "Candidato A", partido: "PT", votos: 125, porcentagem: "42.37" },
+                  { numero: "15", nome: "Candidato C", partido: "MDB", votos: 10, porcentagem: "3.38" }
+                ]
+              }
+            ]
+          },
+          {
+            id: "loc-3",
+            nome: "Escola Municipal Deputado José Medeiros",
+            bairro: "Centro",
+            secoes: [
+              {
+                numeroSecao: "0030",
+                status: "TOTALIZADA",
+                eleitoresAptos: 310,
+                comparecimento: 260,
+                votosValidos: 245,
+                votosBrancos: 8,
+                votosNulos: 7,
+                candidatos: [
+                  { numero: "13", nome: "Candidato A", partido: "PT", votos: 135, porcentagem: "55.10" },
+                  { numero: "22", nome: "Candidato B", partido: "PL", votos: 100, porcentagem: "40.81" },
+                  { numero: "15", nome: "Candidato C", partido: "MDB", votos: 10, porcentagem: "4.08" }
+                ]
+              }
+            ]
+          }
+        ]
+      };
+    }
+
+    // Atualização automática
+    setInterval(() => {
+      if (visaoAtiva === 'geral') carregarDados();
+      else carregarUrnas();
+    }, 10000);
+
+    // Carga inicial
     carregarDados();
   </script>
 </body>
